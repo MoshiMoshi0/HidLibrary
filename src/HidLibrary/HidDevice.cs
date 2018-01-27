@@ -170,12 +170,6 @@ namespace HidLibrary
             readDelegate.BeginInvoke(timeout, EndRead, asyncState);
         }
 
-        public async Task<HidDeviceData> ReadAsync(int timeout = 0)
-        {
-            var readDelegate = new ReadDelegate(Read);
-            return await Task<HidDeviceData>.Factory.FromAsync(readDelegate.BeginInvoke, readDelegate.EndInvoke, timeout, null);
-        }
-
         public HidReport ReadReport()
         {
             return ReadReport(0);
@@ -196,12 +190,6 @@ namespace HidLibrary
             var readReportDelegate = new ReadReportDelegate(ReadReport);
             var asyncState = new HidAsyncState(readReportDelegate, callback);
             readReportDelegate.BeginInvoke(timeout, EndReadReport, asyncState);
-        }
-
-        public async Task<HidReport> ReadReportAsync(int timeout = 0)
-        {
-            var readReportDelegate = new ReadReportDelegate(ReadReport);
-            return await Task<HidReport>.Factory.FromAsync(readReportDelegate.BeginInvoke, readReportDelegate.EndInvoke, timeout, null);
         }
 
         /// <summary>
@@ -377,12 +365,6 @@ namespace HidLibrary
             writeDelegate.BeginInvoke(data, timeout, EndWrite, asyncState);
         }
 
-        public async Task<bool> WriteAsync(byte[] data, int timeout = 0)
-        {
-            var writeDelegate = new WriteDelegate(Write);
-            return await Task<bool>.Factory.FromAsync(writeDelegate.BeginInvoke, writeDelegate.EndInvoke, data, timeout, null);
-        }
-
         public bool WriteReport(HidReport report)
         {
             return WriteReport(report, 0);
@@ -422,12 +404,6 @@ namespace HidLibrary
             }
             else
                 throw new ArgumentException("The output report is null, it must be allocated before you call this method", "report");
-        }
-
-        public async Task<bool> WriteReportAsync(HidReport report, int timeout = 0)
-        {
-            var writeReportDelegate = new WriteReportDelegate(WriteReport);
-            return await Task<bool>.Factory.FromAsync(writeReportDelegate.BeginInvoke, writeReportDelegate.EndInvoke, report, timeout, null);
         }
 
         public HidReport CreateReport()
