@@ -30,9 +30,6 @@ namespace HidLibrary
         internal HidDevice(string devicePath, string description = null)
         {
             _deviceEventMonitor = new HidDeviceEventMonitor(this);
-            _deviceEventMonitor.Inserted += DeviceEventMonitorInserted;
-            _deviceEventMonitor.Removed += DeviceEventMonitorRemoved;
-
             _devicePath = devicePath;
             _description = description;
 
@@ -53,11 +50,38 @@ namespace HidLibrary
 
         public IntPtr Handle { get; private set; }
         public bool IsOpen { get; private set; }
-        public bool IsConnected { get { return HidDevices.IsConnected(_devicePath); } }
+
+        private bool isConnectedFlag = true;
+        public bool IsConnected
+        {
+            get
+            {
+                //RefreshConnectedFlag();
+                return isConnectedFlag;
+            }
+        }
+
         public string Description { get { return _description; } }
         public HidDeviceCapabilities Capabilities { get { return _deviceCapabilities; } }
         public HidDeviceAttributes Attributes { get { return _deviceAttributes; } }
         public string DevicePath { get { return _devicePath; } }
+
+        internal void RefreshConnectedFlag()
+        {
+            var newConnectedFlag = HidDevices.IsConnected(_devicePath);
+
+            if (newConnectedFlag != isConnectedFlag)
+            {
+                if (newConnectedFlag)
+                {
+                    ReconnectDevice();
+                    Inserted?.Invoke();
+                }
+                else Removed?.Invoke();
+            }
+
+            isConnectedFlag = newConnectedFlag;
+        }
 
         public bool MonitorDeviceEvents
         {
@@ -110,6 +134,12 @@ namespace HidLibrary
             if (!IsOpen) return;
             CloseDeviceIO(Handle);
             IsOpen = false;
+        }
+
+        public void ReconnectDevice()
+        {
+            CloseDevice();
+            OpenDevice();
         }
 
         public HidDeviceData Read()

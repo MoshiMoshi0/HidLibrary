@@ -5,14 +5,7 @@ namespace HidLibrary
 {
     internal class HidDeviceEventMonitor
     {
-        public event InsertedEventHandler Inserted;
-        public event RemovedEventHandler Removed;
-
-        public delegate void InsertedEventHandler();
-        public delegate void RemovedEventHandler();
-
         private readonly HidDevice _device;
-        private bool _wasConnected;
 
         public HidDeviceEventMonitor(HidDevice device)
         {
@@ -27,17 +20,8 @@ namespace HidLibrary
 
         private void DeviceEventMonitor()
         {
-            var isConnected = _device.IsConnected;
-
-            if (isConnected != _wasConnected)
-            {
-                if (isConnected && Inserted != null) Inserted();
-                else if (!isConnected && Removed != null) Removed();
-                _wasConnected = isConnected;
-            }
-
+            _device.RefreshConnectedFlag();
             Thread.Sleep(500);
-
             if (_device.MonitorDeviceEvents) Init();
         }
 
