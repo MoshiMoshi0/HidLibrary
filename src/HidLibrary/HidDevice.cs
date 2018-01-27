@@ -52,14 +52,7 @@ namespace HidLibrary
         public bool IsOpen { get; private set; }
 
         private bool isConnectedFlag = true;
-        public bool IsConnected
-        {
-            get
-            {
-                //RefreshConnectedFlag();
-                return isConnectedFlag;
-            }
-        }
+        public bool IsConnected => isConnectedFlag;
 
         public string Description { get { return _description; } }
         public HidDeviceCapabilities Capabilities { get { return _deviceCapabilities; } }
