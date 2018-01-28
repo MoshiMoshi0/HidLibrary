@@ -530,11 +530,20 @@ namespace HidLibrary
         private bool WriteData(byte[] data, int timeout)
         {
             if (_deviceCapabilities.OutputReportByteLength <= 0) return false;
-
-            var buffer = CreateOutputBuffer();
             uint bytesWritten = 0;
 
-            Array.Copy(data, 0, buffer, 0, Math.Min(data.Length, _deviceCapabilities.OutputReportByteLength));
+            //Optimization: Don't create a new buffer & copy if given data array is of sufficient size.
+            //Thanks to Sam Messina
+            byte[] buffer;
+            if (data.Length == _deviceCapabilities.OutputReportByteLength)
+            {
+                buffer = data;
+            }
+            else
+            {
+                buffer = CreateOutputBuffer();
+                Array.Copy(data, 0, buffer, 0, Math.Min(data.Length, _deviceCapabilities.OutputReportByteLength));
+            }
 
             if (_deviceWriteMode == DeviceMode.Overlapped)
             {
@@ -562,6 +571,7 @@ namespace HidLibrary
                 switch (result)
                 {
                     case NativeMethods.WAIT_OBJECT_0:
+                        NativeMethods.CloseHandle(overlapped.EventHandle);
                         return true;
                     case NativeMethods.WAIT_TIMEOUT:
                         return false;
