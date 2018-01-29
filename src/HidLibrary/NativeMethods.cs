@@ -36,6 +36,9 @@ namespace HidLibrary
 		    public bool bInheritHandle;
 	    }
 
+        [DllImport("kernel32.dll")]
+        static internal extern bool SetEvent(IntPtr hEvent);
+
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true, CharSet = CharSet.Auto)]
         static internal extern bool CancelIo(IntPtr hFile);
 
