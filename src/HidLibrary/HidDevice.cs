@@ -31,7 +31,7 @@ namespace HidLibrary
 
         private void AddEventHandle(IntPtr h)
         {
-            lock(eventListLock)
+            lock (eventListLock)
             {
                 if (eventPointerList.Contains(h)) return;
                 eventPointerList.Add(h);
@@ -47,16 +47,19 @@ namespace HidLibrary
             }
         }
 
-        public void SetAllEvents()
+        private bool disableReadWrite = false;
+        public void SetAllEvents(bool disableReadWrite)
         {
             lock (eventListLock)
             {
                 foreach (var h in eventPointerList)
                     NativeMethods.SetEvent(h);
                 eventPointerList.Clear();
+                if (disableReadWrite)
+                    this.disableReadWrite = true;
             }
         }
-            
+
 
         internal HidDevice(string devicePath, string description = null)
         {
@@ -174,7 +177,7 @@ namespace HidLibrary
 
         public void ReconnectDevice()
         {
-            SetAllEvents();
+            SetAllEvents(false);
             CloseDevice();
             OpenDevice(DeviceMode.Overlapped, DeviceMode.Overlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
         }
@@ -664,11 +667,23 @@ namespace HidLibrary
                     overlapped.OffsetLow = 0;
                     overlapped.OffsetHigh = 0;
                     overlapped.EventHandle = NativeMethods.CreateEvent(ref security, Convert.ToInt32(false), Convert.ToInt32(true), string.Empty);
-                    AddEventHandle(overlapped.EventHandle);
+
 
                     try
                     {
-                        var success = NativeMethods.ReadFile(Handle, nonManagedBuffer, (uint)buffer.Length, out bytesRead, ref overlapped);
+                        bool success = false;
+                        lock (eventListLock)
+                        {
+                            if (!disableReadWrite)
+                            {
+                                AddEventHandle(overlapped.EventHandle);
+                                success = NativeMethods.ReadFile(Handle, nonManagedBuffer, (uint)buffer.Length, out bytesRead, ref overlapped);
+                            }
+                            else
+                            {
+                                success = false;
+                            }
+                        }
 
                         if (success)
                         {
